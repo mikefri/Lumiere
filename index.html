@@ -23,24 +23,41 @@
 
         input[type="range"] { -webkit-appearance: none; height: 6px; border-radius: 10px; background: #1e293b; outline: none; }
         input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 20px; height: 20px; border-radius: 50%; background: white; border: 3px solid #38bdf8; cursor: pointer; box-shadow: 0 0 10px rgba(56, 189, 248, 0.5); }
-    </style>
-</head>
-<body class="p-6 pb-24">
+        /* Effet de flou sur les boutons du header */
+.glass { 
+    background: rgba(30, 41, 59, 0.4); 
+    backdrop-filter: blur(8px); 
+    border-radius: 18px; 
+}
 
-    <header class="max-w-md mx-auto mb-10 flex justify-between items-center">
-        <div>
-            <h1 class="text-4xl font-black italic tracking-tighter bg-gradient-to-r from-sky-400 to-blue-500 bg-clip-text text-transparent">Lumiere Remote</h1>
-            <div class="flex items-center gap-2 mt-1">
-                <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                <p id="global-info" class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Synchronisation live...</p>
-            </div>
+/* Animation fluide pour l'icône de rafraîchissement */
+.rotate-180 { transform: rotate(180deg); }
+    
+    
+    </style>
+<header class="max-w-md mx-auto py-8 flex justify-between items-center">
+    <div>
+        <h1 class="text-4xl font-black italic tracking-tighter bg-gradient-to-br from-sky-400 to-blue-600 bg-clip-text text-transparent">LUMEIRE X</h1>
+        <div class="flex items-center gap-2 mt-1">
+            <div class="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse shadow-[0_0_8px_#10b981]"></div>
+            <p id="global-status" class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Quantum Link Active</p>
         </div>
-        <button onclick="fetchAllStatesWithAnim(this)" class="group p-3 bg-white/5 border border-white/10 rounded-2xl hover:bg-white/10 hover:border-sky-500/50 transition-all duration-300 shadow-lg shadow-black/20">
-    <svg id="refresh-icon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-sky-400 group-hover:text-sky-300 transition-transform duration-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-    </svg>
-</button>
-    </header>
+    </div>
+
+    <div class="flex gap-2">
+        <button onclick="masterOff(this)" class="p-3 glass border border-red-500/20 text-red-500 hover:bg-red-500/10 transition-all duration-300 active:scale-90 shadow-lg shadow-red-900/20" title="Éteindre tout">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+        </button>
+
+        <button onclick="fetchAllStatesWithAnim(this)" class="p-3 glass border border-white/10 text-sky-400 hover:bg-white/5 transition-all duration-500 active:rotate-180 shadow-lg shadow-black/20">
+            <svg id="refresh-icon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+        </button>
+    </div>
+</header>
 
     <main id="device-container" class="max-w-md mx-auto space-y-6">
         </main>
@@ -189,6 +206,35 @@
     setTimeout(() => {
         icon.classList.remove('rotate-180');
     }, 500);
+}
+
+        async function masterOff(btn) {
+    if (!confirm("Éteindre toutes les lumières ?")) return;
+
+    // Effet visuel immédiat sur le bouton
+    btn.classList.add('scale-90', 'opacity-50');
+    
+    // On boucle sur tous les devices stockés dans la variable 'devices'
+    const promises = devices.map(async (d) => {
+        if (d.online) {
+            // On envoie l'ordre à Tuya
+            await sendCmd(d.id, 'switch_led', false);
+            
+            // On met à jour l'interface visuellement sans attendre
+            const toggle = document.getElementById(`sw-${d.id}`);
+            if (toggle) toggle.checked = false;
+            updateCardStyle(d.id, false);
+        }
+    });
+
+    // On attend que toutes les commandes soient parties
+    await Promise.all(promises);
+    
+    // Remise à l'état normal du bouton
+    btn.classList.remove('scale-90', 'opacity-50');
+    
+    // Petite vibration de succès
+    if (window.navigator.vibrate) window.navigator.vibrate([100, 50, 100]);
 }
 
         // Auto-refresh toutes les 10 secondes
