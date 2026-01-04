@@ -3,68 +3,59 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lumiere Remote</title>
+    <title>Lumeire X - Fix</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@jaames/iro@5"></script>
     <style>
-        body { background: #0b0f1a; color: white; font-family: 'Inter', sans-serif; }
-        .glass { background: rgba(30, 41, 59, 0.6); backdrop-filter: blur(12px); border-radius: 32px; border: 1px solid rgba(255,255,255,0.05); transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
-        
-        /* État Allumé : Lueur néon */
-        .is-on { border-color: rgba(56, 189, 248, 0.5); box-shadow: 0 0 30px rgba(56, 189, 248, 0.15); background: rgba(30, 41, 59, 0.9); }
-        .is-on h3 { color: #38bdf8; }
-
-        /* État Hors-ligne : Grisé */
-        .is-offline { opacity: 0.4; filter: grayscale(1); pointer-events: none; }
-        
-        .status-badge { font-size: 9px; font-weight: 800; padding: 4px 10px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.05em; }
-        .badge-online { background: rgba(16, 185, 129, 0.1); color: #10b981; }
-        .badge-offline { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
-
-        input[type="range"] { -webkit-appearance: none; height: 6px; border-radius: 10px; background: #1e293b; outline: none; }
-        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 20px; height: 20px; border-radius: 50%; background: white; border: 3px solid #38bdf8; cursor: pointer; box-shadow: 0 0 10px rgba(56, 189, 248, 0.5); }
-        /* Effet de flou sur les boutons du header */
-.glass { 
-    background: rgba(30, 41, 59, 0.4); 
-    backdrop-filter: blur(8px); 
-    border-radius: 18px; 
-}
-
-/* Animation fluide pour l'icône de rafraîchissement */
-.rotate-180 { transform: rotate(180deg); }
-    
-    
+        body { background: #0f172a; color: white; font-family: 'Inter', sans-serif; }
+        .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border-radius: 28px; border: 1px solid rgba(255,255,255,0.05); }
+        .is-on { border-color: rgba(56, 189, 248, 0.5); box-shadow: 0 0 20px rgba(56, 189, 248, 0.1); }
+        input[type="range"] { -webkit-appearance: none; height: 8px; border-radius: 5px; background: #334155; outline: none; }
+        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 22px; height: 22px; border-radius: 50%; background: white; border: 3px solid #38bdf8; cursor: pointer; }
     </style>
-<header class="max-w-md mx-auto py-8 flex justify-between items-center">
-    <div>
-        <h1 class="text-4xl font-black italic tracking-tighter bg-gradient-to-br from-sky-400 to-blue-600 bg-clip-text text-transparent">LUMEIRE X</h1>
-        <div class="flex items-center gap-2 mt-1">
-            <div class="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse shadow-[0_0_8px_#10b981]"></div>
-            <p id="global-status" class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Quantum Link Active</p>
+</head>
+<body class="p-4 pb-24">
+
+    <header class="max-w-md mx-auto py-8 flex justify-between items-center">
+        <div>
+            <h1 class="text-4xl font-black italic tracking-tighter bg-gradient-to-br from-sky-400 to-blue-600 bg-clip-text text-transparent">LUMEIRE X</h1>
+            <p id="global-status" class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">Vérification...</p>
         </div>
-    </div>
+        <div class="flex gap-2">
+            <button onclick="masterOff(this)" class="p-3 glass border border-red-500/20 text-red-500 active:scale-90 transition shadow-lg shadow-red-900/20">
+                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+            </button>
+            <button onclick="loadDevices()" class="p-3 glass border border-white/10 text-sky-400 active:rotate-180 transition-all duration-500">
+                <svg id="refresh-icon" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+            </button>
+        </div>
+    </header>
 
-    <div class="flex gap-2">
-        <button onclick="masterOff(this)" class="p-3 glass border border-red-500/20 text-red-500 hover:bg-red-500/10 transition-all duration-300 active:scale-90 shadow-lg shadow-red-900/20" title="Éteindre tout">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-            </svg>
-        </button>
+    <main id="container" class="max-w-md mx-auto space-y-6"></main>
 
-        <button onclick="fetchAllStatesWithAnim(this)" class="p-3 glass border border-white/10 text-sky-400 hover:bg-white/5 transition-all duration-500 active:rotate-180 shadow-lg shadow-black/20">
-            <svg id="refresh-icon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-            </svg>
-        </button>
-    </div>
-</header>
-
-    <main id="device-container" class="max-w-md mx-auto space-y-6">
-        </main>
+    <details class="max-w-md mx-auto mt-10"><summary class="text-center text-[10px] text-slate-600 cursor-pointer uppercase font-bold tracking-[0.2em]">Clés API</summary>
+        <div class="glass p-6 mt-4 space-y-3">
+            <input id="tuya_id" type="text" placeholder="Access ID" class="w-full p-3 bg-slate-800 rounded-xl outline-none text-sm border border-slate-700">
+            <input id="tuya_secret" type="password" placeholder="Access Secret" class="w-full p-3 bg-slate-800 rounded-xl outline-none text-sm border border-slate-700">
+            <button onclick="save()" class="w-full py-3 bg-sky-600 rounded-xl font-bold">Enregistrer et Relancer</button>
+        </div>
+    </details>
 
     <script>
-        let devices = [];
+        let devicesCache = [];
         let pickers = {};
+
+        window.onload = () => {
+            document.getElementById('tuya_id').value = localStorage.getItem('tuya_id') || '';
+            document.getElementById('tuya_secret').value = localStorage.getItem('tuya_secret') || '';
+            if(localStorage.getItem('tuya_id')) loadDevices();
+        };
+
+        function save() {
+            localStorage.setItem('tuya_id', document.getElementById('tuya_id').value);
+            localStorage.setItem('tuya_secret', document.getElementById('tuya_secret').value);
+            loadDevices();
+        }
 
         async function api(body) {
             const res = await fetch('/api/control', {
@@ -79,95 +70,71 @@
             return res.json();
         }
 
-        async function init() {
+        async function loadDevices() {
+            const statusLabel = document.getElementById('global-status');
+            statusLabel.innerText = "Chargement...";
             const res = await api({ action: 'listDevices' });
             if(res.success) {
-                devices = res.result;
-                const container = document.getElementById('device-container');
-                container.innerHTML = devices.map(d => renderCard(d)).join('');
-                fetchAllStates();
+                devicesCache = res.result;
+                statusLabel.innerText = `${devicesCache.length} Appareils Détectés`;
+                document.getElementById('container').innerHTML = devicesCache.map(d => render(d)).join('');
+                devicesCache.forEach(d => syncStatus(d.id));
+            } else {
+                statusLabel.innerText = "Erreur de connexion";
             }
         }
 
-        function renderCard(d) {
+        async function syncStatus(id) {
+            const res = await api({ action: 'getStatus', deviceId: id });
+            if(res.success && res.result) {
+                const s = res.result;
+                const isOn = s.find(x => x.code === 'switch_led')?.value;
+                const br = s.find(x => x.code === 'bright_value_v2')?.value;
+                const tp = s.find(x => x.code === 'temp_value_v2')?.value;
+
+                document.getElementById(`sw-${id}`).checked = isOn;
+                if(br) document.getElementById(`br-${id}`).value = br;
+                if(tp) document.getElementById(`tp-${id}`).value = tp;
+                updateStyle(id, isOn);
+            }
+        }
+
+        function render(d) {
             return `
-            <div class="glass p-8 ${!d.online ? 'is-offline' : ''}" id="card-${d.id}">
-                <div class="flex justify-between items-start mb-8">
+            <div class="glass p-6 transition-all" id="card-${d.id}">
+                <div class="flex justify-between items-center mb-6">
                     <div>
-                        <div class="mb-2">
-                            <span class="status-badge ${d.online ? 'badge-online' : 'badge-offline'}">
-                                ${d.online ? '● Online' : '● Offline'}
-                            </span>
-                            <span id="label-sw-${d.id}" class="status-badge ml-1 bg-slate-800 text-slate-400">Sync...</span>
-                        </div>
-                        <h3 class="font-black text-2xl transition-colors">${d.name}</h3>
+                        <h3 class="font-bold text-lg">${d.name}</h3>
+                        <span class="text-[9px] ${d.online ? 'text-green-500' : 'text-red-500'} font-bold uppercase tracking-widest">${d.online ? 'En ligne' : 'Hors ligne'}</span>
                     </div>
                     <label class="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" id="sw-${d.id}" onchange="togglePower('${d.id}', this.checked)" class="sr-only peer">
-                        <div class="w-14 h-7 bg-slate-800 rounded-full peer peer-checked:bg-sky-500 after:content-[''] after:absolute after:top-1 after:left-1 after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-7 shadow-inner"></div>
+                        <input type="checkbox" id="sw-${d.id}" onchange="toggle('${d.id}', this.checked)" class="sr-only peer">
+                        <div class="w-14 h-7 bg-slate-700 rounded-full peer peer-checked:bg-sky-500 after:content-[''] after:absolute after:top-1 after:left-1 after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-7"></div>
                     </label>
                 </div>
 
-                <div class="space-y-8">
-                    <div>
-                        <div class="flex justify-between text-[10px] font-bold text-slate-500 uppercase mb-3">Luminosité <span id="val-br-${d.id}">-</span></div>
-                        <input type="range" id="br-${d.id}" min="10" max="1000" class="w-full" onchange="sendCmd('${d.id}','bright_value_v2',parseInt(this.value))">
-                    </div>
-                    <div>
-                        <div class="flex justify-between text-[10px] font-bold text-slate-500 uppercase mb-3">Température <span id="val-tp-${d.id}">-</span></div>
-                        <input type="range" id="tp-${d.id}" min="0" max="1000" class="w-full bg-gradient-to-r from-orange-500 via-white to-sky-400 rounded-lg" onchange="sendCmd('${d.id}','temp_value_v2',parseInt(this.value))">
-                    </div>
+                <div class="space-y-6">
+                    <input type="range" id="br-${d.id}" min="10" max="1000" class="w-full" onchange="sendCmd('${d.id}','bright_value_v2',parseInt(this.value))">
+                    <input type="range" id="tp-${d.id}" min="0" max="1000" class="w-full bg-gradient-to-r from-orange-400 via-white to-blue-400" onchange="sendCmd('${d.id}','temp_value_v2',parseInt(this.value))">
                 </div>
 
-                <div id="pk-${d.id}" class="hidden flex justify-center py-6 mt-4 border-t border-white/5"></div>
+                <div id="pk-${d.id}" class="hidden flex justify-center py-4"></div>
 
-                <div class="mt-8 flex gap-3">
-                    <button onclick="resetWhite('${d.id}')" class="flex-1 py-4 bg-white/5 rounded-2xl text-[10px] font-black uppercase tracking-widest border border-white/5 hover:bg-white hover:text-black transition">Pur Blanc</button>
-                    <button onclick="togglePicker('${d.id}')" class="flex-1 py-4 bg-sky-500/10 text-sky-400 rounded-2xl text-[10px] font-black uppercase border border-sky-500/20">Couleur</button>
+                <div class="mt-6 flex gap-2">
+                    <button onclick="resetWhite('${d.id}')" class="flex-1 py-3 bg-white/5 rounded-xl text-[9px] font-black uppercase tracking-widest border border-white/10">⚪ Pur Blanc</button>
+                    <button onclick="toggleColor('${d.id}')" class="flex-1 py-3 bg-sky-500/5 text-sky-400 rounded-xl text-[9px] font-black uppercase tracking-widest border border-sky-500/10">🌈 Couleur</button>
                 </div>
             </div>`;
         }
 
-        async function fetchAllStates() {
-            document.getElementById('global-info').innerText = "Mise à jour...";
-            for (const d of devices) {
-                if (!d.online) continue;
-                const res = await api({ action: 'getStatus', deviceId: d.id });
-                if(res.success) {
-                    const s = res.result;
-                    const isOn = s.find(x => x.code === 'switch_led')?.value;
-                    const br = s.find(x => x.code === 'bright_value_v2')?.value;
-                    const tp = s.find(x => x.code === 'temp_value_v2')?.value;
-
-                    // Update UI elements
-                    document.getElementById(`sw-${d.id}`).checked = isOn;
-                    document.getElementById(`br-${d.id}`).value = br || 1000;
-                    document.getElementById(`tp-${d.id}`).value = tp || 500;
-                    document.getElementById(`val-br-${d.id}`).innerText = Math.round((br || 1000) / 10) + '%';
-                    document.getElementById(`val-tp-${d.id}`).innerText = Math.round((tp || 500) / 10) + '%';
-                    
-                    updateCardStyle(d.id, isOn);
-                }
-            }
-            document.getElementById('global-info').innerText = "Système à jour";
-        }
-
-        function updateCardStyle(id, isOn) {
+        function updateStyle(id, isOn) {
             const card = document.getElementById(`card-${id}`);
-            const label = document.getElementById(`label-sw-${id}`);
-            if(isOn) {
-                card.classList.add('is-on');
-                label.innerText = "Allumé";
-                label.className = "status-badge ml-1 bg-sky-500/20 text-sky-400";
-            } else {
-                card.classList.remove('is-on');
-                label.innerText = "Éteint";
-                label.className = "status-badge ml-1 bg-slate-800 text-slate-500";
-            }
+            if(isOn) card.classList.add('is-on');
+            else card.classList.remove('is-on');
         }
 
-        async function togglePower(id, state) {
-            updateCardStyle(id, state);
+        async function toggle(id, state) {
+            updateStyle(id, state);
             await sendCmd(id, 'switch_led', state);
         }
 
@@ -179,68 +146,29 @@
             await sendCmd(id, 'work_mode', 'white');
             await sendCmd(id, 'bright_value_v2', 1000);
             await sendCmd(id, 'temp_value_v2', 500);
-            fetchAllStates(); // Force refresh visuel
+            syncStatus(id);
         }
 
-        function togglePicker(id) {
+        async function masterOff(btn) {
+            if(!confirm("Tout éteindre ?")) return;
+            for(const d of devicesCache) {
+                await sendCmd(d.id, 'switch_led', false);
+                document.getElementById(`sw-${d.id}`).checked = false;
+                updateStyle(d.id, false);
+            }
+        }
+
+        function toggleColor(id) {
             const p = document.getElementById(`pk-${id}`);
             p.classList.toggle('hidden');
             if(!pickers[id]) {
-                pickers[id] = new iro.ColorPicker(`#pk-${id}`, { width: 180, layout: [{ component: iro.ui.Wheel }] });
+                pickers[id] = new iro.ColorPicker(`#pk-${id}`, { width: 160, layout: [{ component: iro.ui.Wheel }] });
                 pickers[id].on('input:end', (c) => {
                     sendCmd(id, 'work_mode', 'colour');
                     sendCmd(id, 'colour_data_v2', { h: c.hsv.h, s: c.hsv.s * 10, v: c.hsv.v * 10 });
                 });
             }
         }
-        async function fetchAllStatesWithAnim(btn) {
-    const icon = btn.querySelector('#refresh-icon');
-    
-    // On fait tourner l'icône
-    icon.classList.add('rotate-180');
-    
-    // On appelle la fonction de mise à jour
-    await fetchAllStates();
-    
-    // On remet l'icône en place après un petit délai pour l'effet visuel
-    setTimeout(() => {
-        icon.classList.remove('rotate-180');
-    }, 500);
-}
-
-        async function masterOff(btn) {
-    if (!confirm("Éteindre toutes les lumières ?")) return;
-
-    // Effet visuel immédiat sur le bouton
-    btn.classList.add('scale-90', 'opacity-50');
-    
-    // On boucle sur tous les devices stockés dans la variable 'devices'
-    const promises = devices.map(async (d) => {
-        if (d.online) {
-            // On envoie l'ordre à Tuya
-            await sendCmd(d.id, 'switch_led', false);
-            
-            // On met à jour l'interface visuellement sans attendre
-            const toggle = document.getElementById(`sw-${d.id}`);
-            if (toggle) toggle.checked = false;
-            updateCardStyle(d.id, false);
-        }
-    });
-
-    // On attend que toutes les commandes soient parties
-    await Promise.all(promises);
-    
-    // Remise à l'état normal du bouton
-    btn.classList.remove('scale-90', 'opacity-50');
-    
-    // Petite vibration de succès
-    if (window.navigator.vibrate) window.navigator.vibrate([100, 50, 100]);
-}
-
-        // Auto-refresh toutes les 10 secondes
-        setInterval(fetchAllStates, 10000);
-        
-        window.onload = init;
     </script>
 </body>
 </html>
