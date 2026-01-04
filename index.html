@@ -39,28 +39,28 @@
     }
 </script>
 <style>
-body { 
-    background: #273549; /* Un bleu-gris "industriel" doux */
-    color: #f1f5f9; 
-    font-family: 'Inter', sans-serif; 
-}
+    body { 
+        background: radial-gradient(at top left, #e0f2fe, #f1f5f9 50%, #fafaf9); 
+        color: #334155; 
+        font-family: 'Inter', sans-serif; 
+    }
 
     /* Style Glassmorphism principal */
-.glass { 
-    background: rgba(30, 41, 59, 0.85); 
-    backdrop-filter: blur(12px); 
-    border-radius: 32px; 
-    border: 1px solid rgba(255, 255, 255, 0.1); 
-    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2); 
-    transition: all 0.4s ease; 
-}
+    .glass { 
+        background: rgba(255, 255, 255, 0.6); 
+        backdrop-filter: blur(15px); 
+        border-radius: 32px; 
+        border: 1px solid rgba(255, 255, 255, 0.8); 
+        box-shadow: 0 15px 35px rgba(148, 163, 184, 0.15); 
+        transition: all 0.4s ease; 
+    }
 
     /* État quand l'ampoule est allumée */
-.is-on { 
-    background: rgba(45, 58, 80, 1) !important; 
-    border-color: #38bdf8 !important; 
-    box-shadow: 0 0 20px rgba(56, 189, 248, 0.2); 
-}
+    .is-on { 
+        background: rgba(255, 255, 255, 0.9) !important; 
+        border-color: #38bdf8 !important; 
+        box-shadow: 0 10px 25px rgba(56, 189, 248, 0.15); 
+    }
 
     .card-offline { 
         opacity: 0.5; 
@@ -131,12 +131,6 @@ body {
 
     /* Bouton mode couleur */
     .bg-sky-500\/5 { background: rgba(56, 189, 248, 0.1); }
-
-    .label-text { color: #94a3b8; } /* Gris clair pour les labels */
-
-    input[type="range"] { background: #475569; }
-
-    
 </style>
 
 
