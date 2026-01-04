@@ -1,16 +1,21 @@
 {
-  "name": "Lumiere Remote",
   "short_name": "Lumiere",
-  "start_url": "/",
-  "display": "standalone",
-  "background_color": "#f0f3f7",
-  "theme_color": "#3498db",
+  "name": "Lumiere Remote Control",
   "icons": [
     {
       "src": "/icon.png",
-      "sizes": "1024x1024",
+      "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
+    },
+    {
+      "src": "/icon.png",
+      "sizes": "512x512",
+      "type": "image/png"
     }
-  ]
+  ],
+  "start_url": "/",
+  "display": "standalone",
+  "theme_color": "#0f172a",
+  "background_color": "#0f172a"
 }
