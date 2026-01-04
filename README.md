@@ -1,6 +1,6 @@
 # 💡 Lumiere-Remote - Interface de Contrôle
 
-**Lumeire X** est un tableau de bord domotique moderne et élégant conçu pour piloter tes ampoules connectées (Tuya/Calex). L'interface utilise le **Glassmorphism** pour un look futuriste et une ergonomie pensée pour le mobile.
+**Lumiere-Remote** est un tableau de bord domotique moderne et élégant conçu pour piloter tes ampoules connectées (Tuya/Calex). L'interface utilise le **Glassmorphism** pour un look futuriste et une ergonomie pensée pour le mobile.
 
 ![Status](https://img.shields.io/badge/Status-Stable-success?style=for-the-badge)
 ![UI](https://img.shields.io/badge/UI-Glassmorphism-sky?style=for-the-badge)
