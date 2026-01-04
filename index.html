@@ -58,9 +58,14 @@
 @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 .toast-success { border-left: 4px solid #38bdf8; }
 .toast-error { border-left: 4px solid #ef4444; }
+        .glass { 
+    box-shadow: 0 0 20px rgba(56, 189, 248, 0.2), inset 0 0 10px rgba(255, 255, 255, 0.1); 
+    border: 1px solid rgba(56, 189, 248, 0.4); 
+}
     </style>
 </head>
-<body class="p-4 pb-24">
+<body class="p-4 min-h-screen flex justify-center items-start overscroll-behavior-y-contain">
+    <div class="glass w-full max-w-xl p-6 border border-white/10 shadow-2xl my-4">
 <div id="toast-container"></div>
     <div id="custom-confirm" class="fixed inset-0 z-[10000] hidden flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm">
     <div class="glass p-8 max-w-xs w-full border border-sky-500/30 shadow-2xl scale-95 animate-in fade-in zoom-in duration-300">
@@ -105,7 +110,7 @@
     <footer class="max-w-md mx-auto mt-12 text-center">
         <button onclick="document.getElementById('config-panel').classList.toggle('hidden')" class="label-text opacity-30 hover:opacity-100 transition">Modifier les clés API</button>
     </footer>
-
+</div>
     <script>
         let devicesCache = [];
         let pickers = {};
