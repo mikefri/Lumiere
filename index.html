@@ -5,84 +5,123 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lumeire - Pilotage</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .device-card { background: white; border-radius: 20px; padding: 20px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); border: 1px solid #e2e8f0; }
+        input[type="range"] { height: 8px; border-radius: 5px; background: #edf2f7; appearance: none; width: 100%; }
+    </style>
 </head>
 <body class="bg-slate-50 p-4">
     <div class="max-w-md mx-auto">
+        <details class="mb-8 bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+            <summary class="text-sm font-bold text-slate-500 cursor-pointer">🔑 Configuration API (LocalStorage)</summary>
+            <div class="mt-4 space-y-3">
+                <input type="text" id="accessId" placeholder="Tuya Access ID" class="w-full p-2 border rounded-lg text-sm">
+                <input type="password" id="accessSecret" placeholder="Tuya Access Secret" class="w-full p-2 border rounded-lg text-sm">
+                <button onclick="saveKeys()" class="w-full bg-slate-800 text-white py-2 rounded-lg text-sm font-bold">Enregistrer les clés</button>
+            </div>
+        </details>
+
         <div class="flex justify-between items-center mb-6">
-            <h1 class="text-2xl font-bold">Mes Lumières</h1>
-            <button onclick="loadDevices()" class="bg-blue-600 text-white px-4 py-2 rounded-lg">Actualiser</button>
+            <h1 class="text-2xl font-black text-slate-900 tracking-tight">LUMEIRE</h1>
+            <button onclick="loadDevices()" class="bg-blue-600 text-white px-5 py-2 rounded-xl font-bold shadow-lg active:scale-95 transition">🔄</button>
         </div>
 
-        <div id="device-list" class="space-y-4">
+        <div id="device-list" class="space-y-6">
             </div>
     </div>
 
     <script>
-        // Remplace par tes clés ici pour éviter le prompt
-        const CONFIG = {
-            accessId: 'TON_ID',
-            accessSecret: 'TON_SECRET'
+        // Charger les clés au démarrage
+        window.onload = () => {
+            document.getElementById('accessId').value = localStorage.getItem('tuya_access_id') || '';
+            document.getElementById('accessSecret').value = localStorage.getItem('tuya_access_secret') || '';
+            if(localStorage.getItem('tuya_access_id')) loadDevices();
         };
+
+        function saveKeys() {
+            localStorage.setItem('tuya_access_id', document.getElementById('accessId').value);
+            localStorage.setItem('tuya_access_secret', document.getElementById('accessSecret').value);
+            alert("Clés enregistrées !");
+            loadDevices();
+        }
+
+        async function apiCall(body) {
+            const accessId = localStorage.getItem('tuya_access_id');
+            const accessSecret = localStorage.getItem('tuya_access_secret');
+
+            if (!accessId || !accessSecret) {
+                alert("Veuillez configurer vos clés API en haut.");
+                return { success: false };
+            }
+
+            const res = await fetch('/api/control', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ...body, accessId, accessSecret })
+            });
+            return res.json();
+        }
 
         async function loadDevices() {
             const container = document.getElementById('device-list');
-            container.innerHTML = "Chargement...";
+            container.innerHTML = `<p class="text-center text-slate-400 animate-pulse">Recherche des appareils...</p>`;
 
             try {
-                const res = await fetch('/api/control', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action: 'listDevices', ...CONFIG })
-                });
-                const data = await res.json();
-
-                // L'erreur venait souvent du chemin : data.result.result ou data.result
-                const devices = data.result?.devices || data.result || [];
+                const data = await apiCall({ action: 'listDevices' });
                 
-                container.innerHTML = "";
-                devices.forEach(dev => {
-                    container.innerHTML += `
-                        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-                            <div class="flex justify-between items-center mb-4">
-                                <span class="font-bold text-lg">${dev.name}</span>
-                                <input type="checkbox" class="w-6 h-6" 
-                                    onchange="send('${dev.id}', 'switch_led', this.checked)">
-                            </div>
-                            
-                            <div class="space-y-4">
-                                <div>
-                                    <label class="block text-xs font-bold text-slate-400 mb-1">LUMINOSITÉ</label>
-                                    <input type="range" min="10" max="1000" class="w-full" 
-                                        onchange="send('${dev.id}', 'bright_value_v2', parseInt(this.value))">
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-bold text-slate-400 mb-1">TEMPÉRATURE</label>
-                                    <input type="range" min="0" max="1000" class="w-full" 
-                                        onchange="send('${dev.id}', 'temp_value_v2', parseInt(this.value))">
-                                </div>
-                            </div>
+                if (data.success) {
+                    const devices = data.result?.devices || data.result || [];
+                    if (devices.length === 0) {
+                        container.innerHTML = `<p class="text-center text-slate-500">Aucune lumière trouvée.</p>`;
+                        return;
+                    }
 
-                            <div class="flex gap-2 mt-4">
-                                <button onclick="send('${dev.id}', 'work_mode', 'white')" class="text-[10px] bg-slate-100 px-2 py-1 rounded">Blanc</button>
-                                <button onclick="send('${dev.id}', 'work_mode', 'colour')" class="text-[10px] bg-slate-100 px-2 py-1 rounded">Couleur</button>
+                    container.innerHTML = "";
+                    devices.forEach(dev => {
+                        container.innerHTML += `
+                            <div class="device-card">
+                                <div class="flex justify-between items-center mb-6">
+                                    <div>
+                                        <h3 class="font-bold text-slate-800">${dev.name}</h3>
+                                        <span class="text-[10px] text-blue-500 font-bold uppercase tracking-widest">${dev.category}</span>
+                                    </div>
+                                    <label class="relative inline-flex items-center cursor-pointer">
+                                        <input type="checkbox" onchange="send('${dev.id}', 'switch_led', this.checked)" class="sr-only peer">
+                                        <div class="w-12 h-6 bg-slate-200 rounded-full peer peer-checked:bg-blue-600 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-6"></div>
+                                    </label>
+                                </div>
+                                
+                                <div class="space-y-6">
+                                    <div>
+                                        <label class="text-[10px] font-bold text-slate-400 mb-2 block uppercase">Luminosité</label>
+                                        <input type="range" min="10" max="1000" onchange="send('${dev.id}', 'bright_value_v2', parseInt(this.value))">
+                                    </div>
+                                    <div>
+                                        <label class="text-[10px] font-bold text-slate-400 mb-2 block uppercase">Température</label>
+                                        <input type="range" min="0" max="1000" onchange="send('${dev.id}', 'temp_value_v2', parseInt(this.value))" style="background: linear-gradient(to right, #ffb300, #ffffff, #0095ff);">
+                                    </div>
+                                </div>
+
+                                <div class="grid grid-cols-4 gap-2 mt-6 pt-4 border-t border-slate-50">
+                                    ${['white', 'colour', 'scene', 'music'].map(m => `
+                                        <button onclick="send('${dev.id}', 'work_mode', '${m}')" class="text-[9px] font-bold uppercase py-2 rounded-lg bg-slate-100 text-slate-500 hover:bg-blue-50 hover:text-blue-600 transition">${m}</button>
+                                    `).join('')}
+                                </div>
                             </div>
-                        </div>
-                    `;
-                });
+                        `;
+                    });
+                } else {
+                    container.innerHTML = `<div class="bg-red-50 text-red-600 p-4 rounded-xl text-sm font-medium">Erreur Tuya : ${data.msg || 'Inconnue'}</div>`;
+                }
             } catch (err) {
-                container.innerHTML = "Erreur : " + err.message;
+                container.innerHTML = `<div class="bg-red-50 text-red-600 p-4 rounded-xl text-sm font-medium">Erreur Réseau : ${err.message}</div>`;
             }
         }
 
         async function send(deviceId, code, value) {
-            await fetch('/api/control', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: 'send', deviceId, code, value, ...CONFIG })
-            });
+            const res = await apiCall({ action: 'send', deviceId, code, value });
+            if (!res.success) console.error("Échec de la commande", res);
         }
-
-        window.onload = loadDevices;
     </script>
 </body>
 </html>
