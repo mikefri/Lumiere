@@ -112,19 +112,22 @@ function initTokens() {
 
 // Sauvegarde dans le localStorage
 function saveTokens() {
-    const id = document.getElementById('accessId').value;
-    const secret = document.getElementById('accessSecret').value;
+    const id = document.getElementById('accessId').value.trim();
+    const secret = document.getElementById('accessSecret').value.trim();
+    
+    if(!id || !secret) {
+        alert("Veuillez remplir les deux champs.");
+        return;
+    }
+
     localStorage.setItem('tuya_id', id);
     localStorage.setItem('tuya_secret', secret);
-    alert("Configuration enregistrée !");
-    loadDevices(); // Recharge la liste automatiquement
+    
+    console.log("Tokens enregistrés, tentative de chargement...");
+    
+    // On force un rechargement propre de la page pour réinitialiser l'état
+    window.location.reload(); 
 }
-
-// Appelez initTokens au chargement
-window.onload = () => {
-    initTokens();
-    loadDevices();
-};
 
         async function api(body) {
             try {
