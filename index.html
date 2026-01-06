@@ -3,246 +3,260 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Lumiere Remote Ultimate</title>
+    <title>Lumiere Remote</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@jaames/iro@5"></script>
     <style>
-        :root {
-            --bg-gradient: radial-gradient(at top left, #e0f2fe, #f1f5f9 50%, #fafaf9);
-            --glass-bg: rgba(255, 255, 255, 0.6);
-            --text-main: #334155;
-            --card-border: rgba(255, 255, 255, 0.8);
-            --accent: #38bdf8;
-        }
-        body.dark-mode {
-            --bg-gradient: radial-gradient(at top left, #0f172a, #020617);
-            --glass-bg: rgba(15, 23, 42, 0.8);
-            --text-main: #f1f5f9;
-            --card-border: rgba(56, 189, 248, 0.1);
-            --accent: #22d3ee;
-        }
-        body { background: var(--bg-gradient); color: var(--text-main); font-family: 'Inter', sans-serif; min-height: 100vh; transition: all 0.5s ease; }
-        .glass { background: var(--glass-bg); backdrop-filter: blur(15px); border-radius: 32px; border: 1px solid var(--card-border); box-shadow: 0 15px 35px rgba(0,0,0,0.05); transition: all 0.4s ease; }
-        
-        /* [x] Feedback visuel : Glow et Bordure active */
-        .is-on { 
-            border-color: var(--accent) !important;
-            box-shadow: 0 0 25px rgba(56, 189, 248, 0.3) !important;
-            background: rgba(255, 255, 255, 0.95) !important;
-        }
-        body.dark-mode .is-on { 
-            background: rgba(30, 41, 59, 0.95) !important;
-            box-shadow: 0 0 30px rgba(34, 211, 238, 0.25) !important;
-        }
-
+        body { background: radial-gradient(at top left, #e0f2fe, #f1f5f9 50%, #fafaf9); color: #334155; font-family: 'Inter', sans-serif; }
+        .glass { background: rgba(255, 255, 255, 0.6); backdrop-filter: blur(15px); border-radius: 32px; border: 1px solid rgba(255, 255, 255, 0.8); box-shadow: 0 15px 35px rgba(148, 163, 184, 0.15); transition: all 0.4s ease; }
+        .is-on { background: rgba(255, 255, 255, 0.9) !important; border-color: #38bdf8 !important; box-shadow: 0 10px 25px rgba(56, 189, 248, 0.15); }
+        .card-offline { opacity: 0.5; filter: grayscale(0.9) blur(3px); pointer-events: none; }
         .label-text { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: #64748b; }
-        input[type="range"] { -webkit-appearance: none; height: 8px; border-radius: 5px; background: #d1dce8; width: 100%; outline: none; }
-        body.dark-mode input[type="range"] { background: #334155; }
-        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 22px; height: 22px; border-radius: 50%; background: white; border: 3px solid var(--accent); cursor: pointer; }
-        
-        /* [x] Tri automatique visuel (Offline grisé) */
-        .card-offline { opacity: 0.4; filter: grayscale(1); pointer-events: none !important; }
+        input[type="range"] { -webkit-appearance: none; height: 8px; border-radius: 5px; background: #d1dce8; outline: none; }
+        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 24px; height: 24px; border-radius: 50%; background: white; border: 4px solid #38bdf8; cursor: pointer; }
+        #toast-container { position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
+        .toast { background: white; padding: 12px 24px; border-radius: 16px; font-size: 14px; font-weight: 600; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); animation: slideIn 0.3s ease-out forwards; }
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        .toast-success { border-left: 4px solid #38bdf8; }
+        .toast-error { border-left: 4px solid #ef4444; }
     </style>
 </head>
-<body class="p-4 flex justify-center items-start">
-    
-    <div id="custom-confirm" class="fixed inset-0 z-[10000] hidden flex items-center justify-center p-6 bg-slate-950/60 backdrop-blur-sm">
-        <div class="glass p-8 max-w-xs w-full text-center border-sky-500/30 shadow-2xl">
-            <h3 class="text-xl font-black mb-6">Tout éteindre ?</h3>
-            <div class="flex gap-3">
-                <button id="confirm-yes" class="flex-1 py-4 bg-red-500 text-white rounded-2xl text-[10px] font-black uppercase">Confirmer</button>
-                <button id="confirm-no" class="flex-1 py-4 bg-slate-200 dark:bg-slate-700 rounded-2xl text-[10px] font-black uppercase">Annuler</button>
+<body class="p-4 min-h-screen flex justify-center items-start overscroll-behavior-y-contain">
+    <div class="glass w-full max-w-xl p-6 border border-white/10 shadow-2xl my-4">
+        <div id="toast-container"></div>
+        
+        <div id="custom-confirm" class="fixed inset-0 z-[10000] hidden flex items-start justify-center p-10 bg-slate-950/60 backdrop-blur-sm">
+            <div class="glass p-8 max-w-xs w-full border border-sky-500/30 shadow-2xl">
+                <h3 class="text-xl font-black mb-4 text-center">Tout éteindre ?</h3>
+                <div class="flex gap-3">
+                    <button id="confirm-yes" class="flex-1 py-3 bg-red-500/20 border border-red-500/50 rounded-xl text-red-500 font-black uppercase text-[10px]">Confirmer</button>
+                    <button id="confirm-no" class="flex-1 py-3 bg-white/5 border border-white/10 rounded-xl text-slate-500 font-black uppercase text-[10px]">Annuler</button>
+                </div>
             </div>
         </div>
-    </div>
 
-    <div class="glass w-full max-w-xl p-6 my-4">
-        <header class="max-w-md mx-auto py-6 flex justify-between items-center">
+        <header class="max-w-md mx-auto py-8 flex justify-between items-center">
             <div>
-                <h1 class="text-4xl font-black italic tracking-tighter bg-gradient-to-br from-sky-500 to-blue-700 bg-clip-text text-transparent">Lumiere X</h1>
-                <p class="label-text mt-1 text-sky-500">Organisation Smart</p>
+                <h1 class="text-4xl font-black italic tracking-tighter bg-gradient-to-br from-sky-400 to-blue-600 bg-clip-text text-transparent">Lumiere Remote</h1>
+                <p class="label-text mt-1 text-sky-500 italic">Interface de Contrôle</p>
             </div>
             <div class="flex gap-2">
-                <button onclick="masterOff()" class="p-3 glass border border-red-500/20 text-red-500 active:scale-90 transition">
+                <button onclick="masterOff()" class="p-3 glass border border-red-500/20 text-red-500 active:scale-90 transition shadow-lg">
                     <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
                 </button>
-                <button onclick="loadDevices()" class="p-3 glass border border-white/10 text-sky-400 active:rotate-180 transition">
+                <button onclick="loadDevices()" class="p-3 glass border border-white/10 text-sky-400 active:rotate-180 transition shadow-lg">
                     <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
                 </button>
             </div>
         </header>
 
-        <main id="container" class="max-w-md mx-auto space-y-6"></main>
+        <section id="config-panel" class="max-w-md mx-auto mb-8 hidden">
+            <div class="glass p-6 border-sky-500/30 border">
+                <h2 class="label-text mb-4 text-sky-400 text-center text-xs">Paramètres Cloud Tuya</h2>
+                <div class="space-y-3">
+                    <input id="tuya_id" type="text" placeholder="Access ID" class="w-full p-4 bg-white/50 rounded-2xl outline-none text-sm border border-slate-200 focus:border-sky-500">
+                    <input id="tuya_secret" type="password" placeholder="Access Secret" class="w-full p-4 bg-white/50 rounded-2xl outline-none text-sm border border-slate-200 focus:border-sky-500">
+                    <button onclick="save()" class="w-full py-4 bg-sky-600 hover:bg-sky-500 text-white rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all">Enregistrer</button>
+                </div>
+            </div>
+        </section>
 
-        <footer class="max-w-md mx-auto mt-12 pt-8 border-t border-black/5 dark:border-white/5 text-center">
-            <button onclick="document.body.classList.toggle('dark-mode')" class="label-text bg-white/50 dark:bg-slate-800 px-4 py-2 rounded-full mb-4 shadow-sm">Changer thème 🌗</button>
-            <p class="text-[10px] font-bold tracking-widest uppercase opacity-40">Domotique X-Remote</p>
+        <main id="container" class="max-w-md mx-auto space-y-8"></main>
+
+        <footer class="max-w-md mx-auto mt-12 text-center">
+            <button onclick="document.getElementById('config-panel').classList.toggle('hidden')" class="label-text opacity-30 hover:opacity-100 transition">Modifier les clés API</button>
         </footer>
     </div>
 
     <script>
         let devicesCache = [];
         let pickers = {};
-        let deviceStates = {}; // [x] Mémoire d'état
 
         window.onload = () => {
-            // [x] Thème Adaptatif (Mode Nuit après 20h)
-            const hour = new Date().getHours();
-            if(hour >= 20 || hour < 7) document.body.classList.add('dark-mode');
-            loadDevices();
+            const id = localStorage.getItem('tuya_id');
+            const secret = localStorage.getItem('tuya_secret');
+            if(!id || !secret) {
+                document.getElementById('config-panel').classList.remove('hidden');
+            } else {
+                document.getElementById('tuya_id').value = id;
+                document.getElementById('tuya_secret').value = secret;
+                loadDevices();
+            }
         };
+
+        function save() {
+            localStorage.setItem('tuya_id', document.getElementById('tuya_id').value);
+            localStorage.setItem('tuya_secret', document.getElementById('tuya_secret').value);
+            document.getElementById('config-panel').classList.add('hidden');
+            showToast("Paramètres sauvegardés !");
+            loadDevices();
+        }
 
         async function api(body) {
             try {
                 const res = await fetch('/api/control', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ ...body, accessId: localStorage.getItem('tuya_id'), accessSecret: localStorage.getItem('tuya_secret') })
+                    body: JSON.stringify({ 
+                        ...body, 
+                        accessId: localStorage.getItem('tuya_id'), 
+                        accessSecret: localStorage.getItem('tuya_secret') 
+                    })
                 });
                 return await res.json();
-            } catch (e) { return { success: false }; }
+            } catch (e) {
+                return { success: false };
+            }
         }
 
         async function loadDevices() {
             const res = await api({ action: 'listDevices' });
             if(res.success) {
-                // [x] Tri automatique (Online en haut) & [x] Tri alphabétique
-                devicesCache = res.result.sort((a, b) => {
-                    if (a.online !== b.online) return a.online ? -1 : 1;
-                    return a.name.localeCompare(b.name);
-                });
+                devicesCache = res.result;
                 document.getElementById('container').innerHTML = devicesCache.map(d => render(d)).join('');
                 devicesCache.forEach(d => { if(d.online) syncStatus(d.id); });
             }
-        }
-
-        function render(d) {
-            // [x] Gestion Hybride : Identification automatique
-            const isLight = d.category === 'dj' || d.category === 'dd' || d.name.toLowerCase().includes('lum');
-            return `
-            <div class="glass p-8 ${!d.online ? 'card-offline' : ''}" id="card-${d.id}">
-                <div class="flex justify-between items-start mb-4">
-                    <div>
-                        <h3 class="font-black text-xl leading-none">${d.name}</h3>
-                        <div class="mt-3 flex items-center gap-2">
-                            <span id="badge-${d.id}" class="text-[9px] font-black px-2 py-1 rounded-lg border border-slate-100 bg-white/80 dark:bg-slate-800 text-slate-400 uppercase italic">Sync...</span>
-                            <span class="text-[8px] opacity-40 uppercase font-bold">${d.online ? 'Connecté' : 'Hors-ligne'}</span>
-                        </div>
-                    </div>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" id="sw-${d.id}" onchange="universalToggle('${d.id}', this.checked)" class="sr-only peer">
-                        <div class="w-14 h-7 bg-slate-200 dark:bg-slate-700 rounded-full peer peer-checked:bg-sky-500 after:content-[''] after:absolute after:top-1 after:left-1 after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-7 shadow-inner"></div>
-                    </label>
-                </div>
-                ${isLight ? `
-                <div class="space-y-6 border-t border-black/5 dark:border-white/5 pt-6 mt-4">
-                    <div class="space-y-2">
-                        <span class="label-text">Luminosité</span>
-                        <input type="range" id="br-${d.id}" min="10" max="1000" onchange="changeBrightness('${d.id}', this.value)">
-                    </div>
-                    <div class="space-y-2">
-                        <span class="label-text">Température</span>
-                        <input type="range" id="tp-${d.id}" min="0" max="1000" class="bg-gradient-to-r from-orange-300 via-white to-sky-300" onchange="sendCmd('${d.id}','temp_value_v2',parseInt(this.value))">
-                    </div>
-                    <div id="pk-${d.id}" class="hidden flex justify-center py-4 bg-black/5 rounded-3xl"></div>
-                    <div class="flex gap-2">
-                        <button onclick="setWhiteMode('${d.id}')" class="flex-1 py-3 bg-white/50 dark:bg-white/10 rounded-2xl text-[9px] font-black uppercase">Mode Blanc</button>
-                        <button onclick="toggleColorPicker('${d.id}')" class="flex-1 py-3 bg-sky-500/10 text-sky-600 rounded-2xl text-[9px] font-black uppercase">Couleurs</button>
-                    </div>
-                </div>` : ''}
-            </div>`;
         }
 
         async function syncStatus(id) {
             const res = await api({ action: 'getStatus', deviceId: id });
             if(res.success && res.result) {
                 const s = res.result;
-                deviceStates[id] = {
-                    work_mode: s.find(x => x.code === 'work_mode')?.value || 'white',
-                    colour_data_v2: s.find(x => x.code === 'colour_data_v2')?.value
-                };
-                const sw = s.find(x => x.code === 'switch_led' || x.code === 'switch_1');
-                if(sw) {
-                    document.getElementById(`sw-${id}`).checked = sw.value;
-                    updateVisual(id, sw.value);
-                }
+                // Détection intelligente du code On/Off (Ampoule vs Switch)
+                const statusObj = s.find(x => x.code === 'switch_led' || x.code === 'switch_1');
+                const isOn = statusObj ? statusObj.value : false;
+                
                 const br = s.find(x => x.code === 'bright_value_v2')?.value;
-                if(br) document.getElementById(`br-${id}`).value = br;
                 const tp = s.find(x => x.code === 'temp_value_v2')?.value;
-                if(tp) document.getElementById(`tp-${id}`).value = tp;
-            } else {
-                updateVisual(id, false);
+
+                if(document.getElementById(`sw-${id}`)) document.getElementById(`sw-${id}`).checked = isOn;
+                if(br && document.getElementById(`br-${id}`)) document.getElementById(`br-${id}`).value = br;
+                if(tp && document.getElementById(`tp-${id}`)) document.getElementById(`tp-${id}`).value = tp;
+                updateVisual(id, isOn);
             }
         }
 
-        function updateVisual(id, isOn) {
-            const card = document.getElementById(`card-${id}`);
-            const badge = document.getElementById(`badge-${id}`);
-            if(!card || !badge) return;
-            if(isOn) {
-                card.classList.add('is-on');
-                badge.innerText = "● Allumé";
-                badge.className = "text-[9px] font-black px-2 py-1 rounded-lg bg-sky-100 dark:bg-sky-900/40 uppercase text-sky-600 border border-sky-200 dark:border-transparent";
-            } else {
-                card.classList.remove('is-on');
-                badge.innerText = "○ Éteint";
-                // Badge Éteint : Blanc cassé, bordure fine, texte gris acier (plus de noir)
-                badge.className = "text-[9px] font-black px-2 py-1 rounded-lg border border-slate-100 bg-white/80 dark:bg-slate-800 uppercase text-slate-400";
-            }
+        function render(d) {
+            // Détection si c'est un module pilotable en couleur/intensité (Ampoule)
+            const isLight = d.category === 'dj' || d.category === 'dd' || d.name.toLowerCase().includes('lum');
+
+            return `
+            <div class="glass p-8 ${!d.online ? 'card-offline' : ''}" id="card-${d.id}">
+                <div class="flex justify-between items-start mb-8">
+                    <div>
+                        <h3 class="font-black text-xl mb-2">${d.name}</h3>
+                        <div class="flex gap-1 flex-wrap">
+                            <span class="text-[9px] font-black px-2 py-1 rounded bg-white/5 uppercase ${d.online ? 'text-green-500' : 'text-red-500'}">
+                                ${d.online ? '● Connecté' : '○ Hors-ligne'}
+                            </span>
+                            <span id="badge-status-${d.id}" class="text-[9px] font-black px-2 py-1 rounded bg-white/5 uppercase text-slate-400">...</span>
+                        </div>
+                    </div>
+                    <div class="flex flex-col items-center gap-1">
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="sw-${d.id}" onchange="universalToggle('${d.id}', this.checked)" class="sr-only peer">
+                            <div class="w-14 h-7 bg-slate-800 rounded-full peer peer-checked:bg-sky-500 after:content-[''] after:absolute after:top-1 after:left-1 after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-7 shadow-inner"></div>
+                        </label>
+                        <span class="label-text">On/Off</span>
+                    </div>
+                </div>
+
+                <div class="${isLight ? '' : 'hidden'} space-y-8 border-t border-black/5 pt-6">
+                    <div class="space-y-3">
+                        <span class="label-text">Intensité Lumineuse</span>
+                        <input type="range" id="br-${d.id}" min="10" max="1000" class="w-full" onchange="sendCmd('${d.id}','bright_value_v2',parseInt(this.value))">
+                    </div>
+                    <div class="space-y-3">
+                        <span class="label-text">Température</span>
+                        <input type="range" id="tp-${d.id}" min="0" max="1000" class="w-full bg-gradient-to-r from-orange-400 via-white to-sky-400" onchange="sendCmd('${d.id}','temp_value_v2',parseInt(this.value))">
+                    </div>
+                    <div id="pk-${d.id}" class="hidden flex flex-col items-center py-6"></div>
+                    <div class="flex gap-3">
+                        <button onclick="resetWhite('${d.id}')" class="flex-1 py-3 bg-white/40 rounded-2xl border border-white/10 text-[9px] font-black uppercase tracking-widest">Blanc</button>
+                        <button onclick="toggleColor('${d.id}')" class="flex-1 py-3 bg-sky-500/10 rounded-2xl border border-sky-500/20 text-sky-600 text-[9px] font-black uppercase tracking-widest">Couleurs</button>
+                    </div>
+                </div>
+            </div>`;
         }
 
         async function universalToggle(id, state) {
             updateVisual(id, state);
-            const dev = devicesCache.find(x => x.id === id);
-            const isLight = dev.category === 'dj' || dev.category === 'dd' || dev.name.toLowerCase().includes('lum');
-            await sendCmd(id, isLight ? 'switch_led' : 'switch_1', state);
+            const device = devicesCache.find(d => d.id === id);
+            // On tente d'abord switch_led (ampoule), sinon switch_1 (interrupteur)
+            const isLight = device.category === 'dj' || device.category === 'dd' || device.name.toLowerCase().includes('lum');
+            const code = isLight ? 'switch_led' : 'switch_1';
+            await sendCmd(id, code, state);
         }
 
-        async function changeBrightness(id, val) {
-            const state = deviceStates[id];
-            if (state && state.work_mode === 'colour' && state.colour_data_v2) {
-                const c = typeof state.colour_data_v2 === 'string' ? JSON.parse(state.colour_data_v2) : state.colour_data_v2;
-                await sendCmd(id, 'colour_data_v2', { h: c.h, s: c.s, v: parseInt(val) });
+        function updateVisual(id, isOn) {
+            const card = document.getElementById(`card-${id}`);
+            const badge = document.getElementById(`badge-status-${id}`);
+            if(!card || !badge) return;
+            if(isOn) {
+                card.classList.add('is-on');
+                badge.innerText = "● Allumé";
+                badge.classList.replace('text-slate-400', 'text-sky-400');
             } else {
-                await sendCmd(id, 'bright_value_v2', parseInt(val));
+                card.classList.remove('is-on');
+                badge.innerText = "○ Éteint";
+                badge.classList.replace('text-sky-400', 'text-slate-400');
             }
         }
 
-        async function setWhiteMode(id) {
-            await sendCmd(id, 'work_mode', 'white');
-            deviceStates[id].work_mode = 'white';
-            sendCmd(id, 'bright_value_v2', parseInt(document.getElementById(`br-${id}`).value));
-            document.getElementById(`pk-${id}`).classList.add('hidden');
+        async function sendCmd(deviceId, code, value) {
+            const res = await api({ action: 'send', deviceId, code, value });
+            if (!res.success) showToast("Erreur de commande", "error");
+            return res;
         }
 
-        function toggleColorPicker(id) {
+        async function resetWhite(id) {
+            await sendCmd(id, 'work_mode', 'white');
+            await sendCmd(id, 'bright_value_v2', 1000);
+            syncStatus(id);
+        }
+
+        function toggleColor(id) {
             const p = document.getElementById(`pk-${id}`);
             p.classList.toggle('hidden');
             if(!pickers[id]) {
                 pickers[id] = new iro.ColorPicker(`#pk-${id}`, { width: 160, layout: [{ component: iro.ui.Wheel }] });
-                pickers[id].on('input:end', async (c) => {
-                    const data = { h: Math.round(c.hsv.h), s: Math.round(c.hsv.s * 10), v: Math.round(c.hsv.v * 10) };
-                    await sendCmd(id, 'work_mode', 'colour');
-                    await sendCmd(id, 'colour_data_v2', data);
-                    deviceStates[id].work_mode = 'colour';
-                    deviceStates[id].colour_data_v2 = data;
+                pickers[id].on('input:end', (c) => {
+                    sendCmd(id, 'work_mode', 'colour');
+                    sendCmd(id, 'colour_data_v2', { h: c.hsv.h, s: c.hsv.s * 10, v: c.hsv.v * 10 });
                 });
             }
         }
 
-        async function sendCmd(deviceId, code, value) { return await api({ action: 'send', deviceId, code, value }); }
-
         async function masterOff() {
             const modal = document.getElementById('custom-confirm');
             modal.classList.remove('hidden');
-            const choice = await new Promise(resolve => {
-                document.getElementById('confirm-yes').onclick = () => resolve(true);
-                document.getElementById('confirm-no').onclick = () => resolve(false);
+            const choice = await new Promise(r => {
+                document.getElementById('confirm-yes').onclick = () => r(true);
+                document.getElementById('confirm-no').onclick = () => r(false);
             });
             modal.classList.add('hidden');
             if(choice) {
-                devicesCache.forEach(d => { if(d.online) { universalToggle(d.id, false); document.getElementById(`sw-${d.id}`).checked = false; }});
+                showToast("Extinction globale...", "error");
+                devicesCache.forEach(d => {
+                    if(d.online) {
+                        universalToggle(d.id, false);
+                        const sw = document.getElementById(`sw-${d.id}`);
+                        if(sw) sw.checked = false;
+                    }
+                });
             }
+        }
+
+        function showToast(msg, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            toast.innerText = msg;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 500);
+            }, 3000);
         }
     </script>
 </body>
