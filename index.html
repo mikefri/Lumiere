@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Lumiere Remote Pro</title>
+    <title>Lumiere Remote Ultimate</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@jaames/iro@5"></script>
     <style>
@@ -14,7 +14,6 @@
             --card-border: rgba(255, 255, 255, 0.8);
             --accent: #38bdf8;
         }
-
         body.dark-mode {
             --bg-gradient: radial-gradient(at top left, #0f172a, #020617);
             --glass-bg: rgba(15, 23, 42, 0.8);
@@ -22,7 +21,6 @@
             --card-border: rgba(56, 189, 248, 0.1);
             --accent: #22d3ee;
         }
-
         body { 
             background: var(--bg-gradient); 
             color: var(--text-main); 
@@ -30,7 +28,6 @@
             min-height: 100vh;
             transition: all 0.5s ease;
         }
-
         .glass { 
             background: var(--glass-bg); 
             backdrop-filter: blur(15px); 
@@ -40,37 +37,34 @@
             transition: all 0.4s ease; 
         }
 
-        /* [x] Feedback visuel : Glow et Bordure active */
+        /* [x] Feedback visuel (Glow & Border) */
         .is-on { 
             border-color: var(--accent) !important;
-            box-shadow: 0 0 20px rgba(56, 189, 248, 0.3) !important;
+            box-shadow: 0 0 25px rgba(56, 189, 248, 0.25) !important;
             background: rgba(255, 255, 255, 0.9) !important;
         }
-        body.dark-mode .is-on {
-            background: rgba(30, 41, 59, 0.9) !important;
-            box-shadow: 0 0 25px rgba(34, 211, 238, 0.2) !important;
+        body.dark-mode .is-on { 
+            background: rgba(30, 41, 59, 0.95) !important;
+            box-shadow: 0 0 30px rgba(34, 211, 238, 0.2) !important;
         }
 
         .label-text { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: #64748b; }
-        
-        input[type="range"] { -webkit-appearance: none; height: 8px; border-radius: 5px; background: #d1dce8; outline: none; width: 100%; }
+        input[type="range"] { -webkit-appearance: none; height: 8px; border-radius: 5px; background: #d1dce8; width: 100%; outline: none; }
         body.dark-mode input[type="range"] { background: #334155; }
-        input[type="range"]::-webkit-slider-thumb { 
-            -webkit-appearance: none; width: 22px; height: 22px; border-radius: 50%; 
-            background: white; border: 3px solid var(--accent); cursor: pointer; 
-        }
-
+        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 22px; height: 22px; border-radius: 50%; background: white; border: 3px solid var(--accent); cursor: pointer; }
+        
+        /* [x] Tri automatique visuel (Offline grisé) */
         .card-offline { opacity: 0.4; filter: grayscale(1); pointer-events: none !important; }
     </style>
 </head>
 <body class="p-4 flex justify-center items-start">
     
-    <div id="custom-confirm" class="fixed inset-0 z-[10000] hidden flex items-center justify-center p-6 bg-slate-900/80 backdrop-blur-sm">
-        <div class="glass p-8 max-w-xs w-full text-center border-sky-500/50">
+    <div id="custom-confirm" class="fixed inset-0 z-[10000] hidden flex items-center justify-center p-6 bg-slate-950/60 backdrop-blur-sm">
+        <div class="glass p-8 max-w-xs w-full text-center border-sky-500/30 shadow-2xl">
             <h3 class="text-xl font-black mb-6">Tout éteindre ?</h3>
             <div class="flex gap-3">
-                <button id="confirm-yes" class="flex-1 py-4 bg-red-500 text-white rounded-2xl font-black uppercase text-[10px]">Confirmer</button>
-                <button id="confirm-no" class="flex-1 py-4 bg-slate-200 dark:bg-slate-700 rounded-2xl font-black uppercase text-[10px]">Annuler</button>
+                <button id="confirm-yes" class="flex-1 py-4 bg-red-500 text-white rounded-2xl text-[10px] font-black uppercase">Confirmer</button>
+                <button id="confirm-no" class="flex-1 py-4 bg-slate-200 dark:bg-slate-700 rounded-2xl text-[10px] font-black uppercase">Annuler</button>
             </div>
         </div>
     </div>
@@ -79,13 +73,13 @@
         <header class="max-w-md mx-auto py-6 flex justify-between items-center">
             <div>
                 <h1 class="text-4xl font-black italic tracking-tighter bg-gradient-to-br from-sky-500 to-blue-700 bg-clip-text text-transparent">Lumiere X</h1>
-                <p class="label-text mt-1 text-sky-500">Système Intelligent</p>
+                <p id="theme-status" class="label-text mt-1 text-sky-500">Contrôle Total</p>
             </div>
             <div class="flex gap-2">
                 <button onclick="masterOff()" class="p-3 glass border border-red-500/20 text-red-500 active:scale-90 transition">
                     <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
                 </button>
-                <button onclick="loadDevices()" class="p-3 glass border border-white/10 text-sky-400 active:rotate-180 transition duration-500">
+                <button onclick="loadDevices()" class="p-3 glass border border-white/10 text-sky-400 active:rotate-180 transition">
                     <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
                 </button>
             </div>
@@ -94,13 +88,8 @@
         <main id="container" class="max-w-md mx-auto space-y-6"></main>
 
         <footer class="max-w-md mx-auto mt-12 pt-8 border-t border-black/5 dark:border-white/5 text-center">
-            <button onclick="document.body.classList.toggle('dark-mode')" class="label-text bg-white/50 dark:bg-slate-800 px-6 py-3 rounded-full shadow-sm hover:scale-105 transition mb-6">
-                Changer de thème 🌗
-            </button>
-            <div class="opacity-40">
-                <p class="text-[10px] font-bold tracking-widest uppercase">X-Remote Home System</p>
-                <p class="text-[9px] mt-1">Tuya Cloud API v2.0</p>
-            </div>
+            <button onclick="document.body.classList.toggle('dark-mode')" class="label-text bg-white/50 dark:bg-slate-800 px-4 py-2 rounded-full mb-4">Changer thème 🌗</button>
+            <p class="text-[10px] font-bold tracking-widest uppercase opacity-40">Système Domotique X-Remote</p>
         </footer>
     </div>
 
@@ -110,7 +99,7 @@
         let deviceStates = {}; // [x] Mémoire d'état
 
         window.onload = () => {
-            // [x] Thème Adaptatif après 20h
+            // [x] Thème Adaptatif (Mode Nuit après 20h)
             const hour = new Date().getHours();
             if(hour >= 20 || hour < 7) document.body.classList.add('dark-mode');
             loadDevices();
@@ -130,7 +119,7 @@
         async function loadDevices() {
             const res = await api({ action: 'listDevices' });
             if(res.success) {
-                // [x] Tri automatique (Online haut) + [x] Tri alphabétique
+                // [x] Tri automatique (Online en haut) + [x] Tri alphabétique
                 devicesCache = res.result.sort((a, b) => {
                     if (a.online !== b.online) return a.online ? -1 : 1;
                     return a.name.localeCompare(b.name);
@@ -141,6 +130,7 @@
         }
 
         function render(d) {
+            // [x] Gestion Hybride : Identification automatique
             const isLight = d.category === 'dj' || d.category === 'dd' || d.name.toLowerCase().includes('lum');
             return `
             <div class="glass p-8 ${!d.online ? 'card-offline' : ''}" id="card-${d.id}">
@@ -148,7 +138,7 @@
                     <div>
                         <h3 class="font-black text-xl leading-none">${d.name}</h3>
                         <div class="mt-3 flex items-center gap-2">
-                            <span id="badge-${d.id}" class="text-[9px] font-black px-2 py-1 rounded bg-slate-100 dark:bg-slate-800 text-slate-400 uppercase italic">Sync...</span>
+                            <span id="badge-${d.id}" class="text-[9px] font-black px-2 py-1 rounded bg-slate-200/50 dark:bg-slate-800 text-slate-500 uppercase italic">Sync...</span>
                             <span class="text-[8px] opacity-40 uppercase font-bold">${d.online ? 'Connecté' : 'Hors-ligne'}</span>
                         </div>
                     </div>
@@ -194,8 +184,7 @@
                 const tp = s.find(x => x.code === 'temp_value_v2')?.value;
                 if(tp) document.getElementById(`tp-${id}`).value = tp;
             } else {
-                // Fallback si l'état ne peut pas être récupéré
-                document.getElementById(`badge-${id}`).innerText = "○ Éteint";
+                updateVisual(id, false); // Fallback si erreur sync
             }
         }
 
@@ -210,11 +199,10 @@
             } else {
                 card.classList.remove('is-on');
                 badge.innerText = "○ Éteint";
-                badge.className = "text-[9px] font-black px-2 py-1 rounded bg-slate-100 dark:bg-slate-800 uppercase text-slate-400";
+                badge.className = "text-[9px] font-black px-2 py-1 rounded bg-slate-200/50 dark:bg-slate-800 uppercase text-slate-500";
             }
         }
 
-        // [x] Gestion Hybride automatique (switch_led vs switch_1)
         async function universalToggle(id, state) {
             updateVisual(id, state);
             const dev = devicesCache.find(x => x.id === id);
@@ -223,7 +211,6 @@
             await sendCmd(id, code, state);
         }
 
-        // [x] Intensité sans changement de couleur
         async function changeBrightness(id, val) {
             const state = deviceStates[id];
             if (state && state.work_mode === 'colour' && state.colour_data_v2) {
