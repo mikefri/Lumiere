@@ -37,6 +37,25 @@
         input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 24px; height: 24px; border-radius: 50%; background: white; border: 4px solid #38bdf8; cursor: pointer; }
     </style>
 </head>
+
+<div class="glass p-6 mb-8 border-dashed border-sky-200">
+    <h2 class="label-text mb-4">Configuration Tuya Cloud</h2>
+    <div class="grid grid-cols-1 gap-4">
+        <input type="password" id="accessId" placeholder="Access ID" 
+               class="bg-white/50 border border-slate-200 rounded-xl p-3 text-sm outline-none focus:border-sky-400"
+               value="">
+        <input type="password" id="accessSecret" placeholder="Access Secret" 
+               class="bg-white/50 border border-slate-200 rounded-xl p-3 text-sm outline-none focus:border-sky-400"
+               value="">
+        <button onclick="saveTokens()" class="bg-sky-500 text-white font-black text-[10px] uppercase py-3 rounded-xl shadow-lg shadow-sky-200 active:scale-95 transition">
+            Enregistrer les accès
+        </button>
+    </div>
+</div>
+
+
+
+    
 <body class="p-4 flex justify-center items-start">
     
     <div id="custom-confirm" class="fixed inset-0 z-[10000] hidden flex items-center justify-center p-6 bg-slate-950/60 backdrop-blur-sm">
@@ -75,6 +94,30 @@
         let devicesCache = [];
         let pickers = {};
         let deviceStates = {};
+
+        // Initialise les champs avec les valeurs stockées
+function initTokens() {
+    const id = localStorage.getItem('tuya_id');
+    const secret = localStorage.getItem('tuya_secret');
+    if (id) document.getElementById('accessId').value = id;
+    if (secret) document.getElementById('accessSecret').value = secret;
+}
+
+// Sauvegarde dans le localStorage
+function saveTokens() {
+    const id = document.getElementById('accessId').value;
+    const secret = document.getElementById('accessSecret').value;
+    localStorage.setItem('tuya_id', id);
+    localStorage.setItem('tuya_secret', secret);
+    alert("Configuration enregistrée !");
+    loadDevices(); // Recharge la liste automatiquement
+}
+
+// Appelez initTokens au chargement
+window.onload = () => {
+    initTokens();
+    loadDevices();
+};
 
         async function api(body) {
             try {
